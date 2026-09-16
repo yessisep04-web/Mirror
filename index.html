@@ -120,6 +120,17 @@ nav button.active{color:#fff;background:var(--accent);font-weight:800}
   .memory-note{grid-template-columns:1fr}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+.lesson-card{
+  display:block;width:100%;text-align:left;border:1px solid var(--line);
+  background:var(--card);border-radius:16px;padding:15px 48px 15px 15px;
+  margin:9px 0;cursor:pointer;position:relative;color:var(--ink);
+}
+.lesson-card:after{content:"›";position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  font-size:25px;color:var(--accent2);font-weight:800}
+.lesson-card:active{transform:translateY(1px);background:#f8f0e7}
+.lesson-card .lesson-title{font-weight:800}
+.lesson-card .lesson-meta{font-size:12px;color:var(--muted);margin-top:3px}
 </style>
 </head>
 <body>
@@ -313,7 +324,7 @@ const grouped={};
 lessons.forEach((x,i)=>{if(!grouped[x.track]) grouped[x.track]=[]; grouped[x.track].push({...x,i})});
 document.getElementById('lessons').innerHTML=Object.entries(grouped).map(([track,items])=>`
 <div class="track"><h3>${track}</h3><div class="muted" style="font-size:12px;margin-bottom:5px">${items.length} lessons</div>
-${items.map(x=>{let done=d.lessons.includes(x.i);return `<div class="lesson"><button class="${done?'secondary':'primary'}" onclick="openLesson(${x.i})" type="button">${done?'Review':'Open lesson'}</button><span class="tag">Day ${x.i+1}</span><br><b>${x.title}</b><div class="muted" style="font-size:12px;margin-top:3px">${done?'Completed — review anytime.':'Read → study → practice → reflect.'}</div></div>`}).join('')}
+${items.map(x=>{let done=d.lessons.includes(x.i);return `<div class="lesson"><button class="${done?'secondary':'primary'}" onclick="openLesson(${x.i})" type="button">class="lesson-card" data-lesson-index="${x.i}">${done?'Review':'Open lesson'}</button><span class="tag">Day ${x.i+1}</span><br><b>${x.title}</b><div class="muted" style="font-size:12px;margin-top:3px">${done?'Completed — review anytime.':'Read → study → practice → reflect.'}</div></div>`}).join('')}
 </div>`).join('');
 }
 function openLesson(i){
@@ -375,5 +386,19 @@ persist();alert('Communication note saved.');
 function exportData(){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download='mirror-data.json';a.click()}
 function erase(){if(confirm('Erase all Mirror data on this device?')){localStorage.removeItem(KEY);location.reload()}}
 q.textContent=qs[Math.floor(Math.random()*qs.length)];render();
+
+// Lesson-card click/tap support: makes the entire lesson row interactive on mobile.
+(function lessonCardDelegation(){
+  if (window.lessonCardDelegation) return;
+  window.lessonCardDelegation = true;
+  document.addEventListener("click", function(e){
+    const card = e.target.closest("[data-lesson-index]");
+    if(!card) return;
+    const i = Number(card.getAttribute("data-lesson-index"));
+    if(!Number.isFinite(i)) return;
+    if(typeof openLesson === "function") openLesson(i);
+    else if(typeof showLesson === "function") showLesson(i);
+  });
+})();
 </script>
 </body></html>
