@@ -131,6 +131,12 @@ nav button.active{color:#fff;background:var(--accent);font-weight:800}
 .lesson-card:active{transform:translateY(1px);background:#f8f0e7}
 .lesson-card .lesson-title{font-weight:800}
 .lesson-card .lesson-meta{font-size:12px;color:var(--muted);margin-top:3px}
+
+.lesson-video{margin:16px 0;padding:14px;border:1px solid var(--line);border-radius:16px;background:#f7efe6}
+.lesson-video h3{margin-top:0}
+.lesson-video a{display:block;text-decoration:none;color:var(--accent);font-weight:800;padding:12px 13px;background:#fffdf8;border:1px solid var(--line);border-radius:12px}
+.lesson-video small{display:block;color:var(--muted);font-weight:500;margin-top:3px}
+.video-thumb{width:100%;aspect-ratio:16/9;border-radius:12px;object-fit:cover;background:#e8ddd2;margin:8px 0}
 </style>
 </head>
 <body>
@@ -321,11 +327,32 @@ function saveCommunicationLesson(i){d.communicationLessons=d.communicationLesson
 function render(){ic.textContent=d.incidents.length;pc.textContent=d.predictions.length;i2.textContent=d.incidents.length;s2.textContent=d.stops.length;p2.textContent=d.people.length;l2.textContent=d.lessons.length;lessonsEl();renderCommunicationLessons()}
 function lessonsEl(){
 const grouped={};
-lessons.forEach((x,i)=>{if(!grouped[x.track]) grouped[x.track]=[]; grouped[x.track].push({...x,i})});
-document.getElementById('lessons').innerHTML=Object.entries(grouped).map(([track,items])=>`
+lessons.forEach((x,i)=>{const track=x.track||'Core Foundations';if(!grouped[track]) grouped[track]=[];grouped[track].push({...x,i})});
+const el=document.getElementById('lessons');
+if(!el)return;
+el.innerHTML=Object.entries(grouped).map(([track,items])=>`
 <div class="track"><h3>${track}</h3><div class="muted" style="font-size:12px;margin-bottom:5px">${items.length} lessons</div>
-${items.map(x=>{let done=d.lessons.includes(x.i);return `<div class="lesson"><button class="lesson-card ${done?'secondary':'primary'}" data-lesson-index="${x.i}" onclick="openLesson(${x.i})" type="button"><span class="lesson-title">${done?'Review':'Open lesson'}</span></button><span class="tag">Day ${x.i+1}</span><br><b>${x.title}</b><div class="muted" style="font-size:12px;margin-top:3px">${done?'Completed — review anytime.':'Read → study → practice → reflect.'}</div></div>`}).join('')}
+${items.map(x=>{let done=d.lessons.includes(x.i);return `<button type="button" class="lesson-card ${done?'secondary':'primary'}" data-lesson-index="${x.i}"><span class="tag">Day ${x.i+1}</span><br><span class="lesson-title">${x.title}</span><div class="lesson-meta">${done?'Completed — tap to review anytime.':'Tap to open → read → practice → reflect.'}</div></button>`}).join('')}
 </div>`).join('');
+
+el.querySelectorAll('[data-lesson-index]').forEach(btn=>{
+btn.addEventListener('click',function(ev){
+ev.preventDefault();
+ev.stopPropagation();
+const i=Number(this.getAttribute('data-lesson-index'));
+try{
+openLesson(i);
+}catch(err){
+console.error(err);
+const view=document.getElementById('lessonView');
+if(view){
+view.style.display='block';
+view.innerHTML='<div class="card"><h2>Lesson could not open</h2><p>Mirror hit an error while opening this lesson. The lesson data is still saved in the app.</p><p class="muted">'+String(err.message||err)+'</p><button class="secondary" type="button" onclick="closeLesson()">Back to lessons</button></div>';
+view.scrollIntoView({behavior:'smooth',block:'start'});
+}
+}
+});
+});
 }
 function openLesson(i){
 const x=lessons[i];
@@ -345,6 +372,11 @@ view.innerHTML=`<div class="muted" style="font-size:12px">DAY ${i+1} OF ${lesson
 <div class="lesson-passage"><p>${x.passage||x.lesson||''}</p></div>
 <h3>What to know</h3><p>${x.fact||''}</p>
 <h3>Try it</h3><p>${x.exercise||''}</p>
+<div class="lesson-video">
+<h3>Watch & Learn</h3>
+<p class="muted">A YouTube video search matched to this lesson. Choose a current educational video from the results.</p>
+<a target="_blank" rel="noopener" href="${'https://www.youtube.com/results?search_query='+encodeURIComponent((x.title||'psychology')+' psychology explained') }">▶ Find a video for this lesson<small>YouTube • opens in a new tab</small></a>
+</div>
 <h3>Practice rule</h3><p>${x.practice||''}</p>
 <h3>Knowledge check</h3>${qsHtml}
 <h3>Reflection</h3><textarea id="lessonReflection" class="lesson-input" placeholder="${x.reflection_prompt||'What did this lesson make you notice about yourself?'}"></textarea>
@@ -374,19 +406,6 @@ function erase(){if(confirm('Erase all Mirror data on this device?')){localStora
 q.textContent=qs[Math.floor(Math.random()*qs.length)];render();
 
 // Lesson-card click/tap support: makes the entire lesson row interactive on mobile.
-(function lessonCardDelegation(){
-  if (window.lessonCardDelegation) return;
-  window.lessonCardDelegation = true;
-  document.addEventListener("click", function(e){
-    const card = e.target.closest("[data-lesson-index]");
-    if(!card) return;
-    const i = Number(card.getAttribute("data-lesson-index"));
-    if(!Number.isFinite(i)) return;
-    if(typeof openLesson === "function") openLesson(i);
-    else if(typeof showLesson === "function") showLesson(i);
-  });
-})();
-
 (function communicationLessonCardDelegation(){
   if(window.communicationLessonCardDelegation) return;
   window.communicationLessonCardDelegation=true;
