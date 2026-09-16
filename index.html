@@ -328,44 +328,30 @@ ${items.map(x=>{let done=d.lessons.includes(x.i);return `<div class="lesson"><bu
 </div>`).join('');
 }
 function openLesson(i){
-const x=lessons[i]; const done=d.lessons.includes(i); const view=document.getElementById('lessonView');
+const x=lessons[i];
+if(!x){return;}
+const done=d.lessons.includes(i);
+const view=document.getElementById('lessonView');
+if(!view){return;}
 view.style.display='block';
-const qsHtml=x.quiz.map((q,n)=>{
-const answers=q[1]||[q[2]||"Yes","Not sure","No"];
-return `<div class="quizq"><b>${n+1}. ${q[0]}</b><div>${answers.map(a=>`<button type="button" class="secondary quiz-answer" data-q="${n}" data-answer="${String(a).replace(/"/g,'&quot;')}">${a}</button>`).join('')}</div><div id="feedback-${n}" class="muted"></div></div>`;
+const qsHtml=(x.quiz||[]).map((q,n)=>{
+const question=q.question||q.q||q[0]||"Knowledge check";
+const answers=q.options||q.a||q[1]||["Yes","Not sure","No"];
+const correct=Number.isFinite(q.answer)?q.answer:(Number.isFinite(q.correct)?q.correct:null);
+return `<div class="quizq"><b>${n+1}. ${question}</b><div>${answers.map((a,j)=>`<button type="button" class="secondary quiz-answer" data-q="${n}" data-answer-index="${j}" data-correct="${correct===null?'':correct}">${a}</button>`).join('')}</div><div id="feedback-${n}" class="muted"></div></div>`;
 }).join('');
-view.innerHTML=`<div class="muted" style="font-size:12px">DAY ${i+1} OF 30</div>
+view.innerHTML=`<div class="muted" style="font-size:12px">DAY ${i+1} OF ${lessons.length}</div>
 <h2>${x.title}</h2>
-<div class="lesson-passage"><p>${x.passage}</p></div>
-<h3>Key concepts</h3><div class="concepts">${x.concepts.map(c=>`<span class="concept">${c}</span>`).join('')}</div>
-<h3>What to know</h3><p>${x.fact}</p>
-<h3>Learn</h3><p>${x.lesson}</p>
-<h3>Check your understanding</h3>${qsHtml}
-<h3>Try it</h3><p>${x.exercise}</p>
-<textarea id="lessonResponse" class="lesson-input" placeholder="Write your answer here. This is your personal work for this lesson."></textarea>
-<h3>Reflection</h3>${x.reflection.map((r,n)=>`<label>${n+1}. ${r}</label><textarea id="ref-${n}" class="lesson-input"></textarea>`).join('')}
-<h3>Practice rule</h3><p>${x.practice}</p>
-<div style="margin-top:16px;padding:13px;background:var(--soft);border-radius:14px">
-<h3>Study resources</h3>
-<p><b>Read:</b> <a href="${x.reading[1]}" target="_blank" rel="noopener">${x.reading[0]}</a></p>
-<p><b>Watch:</b> <a href="${x.video}" target="_blank" rel="noopener">YouTube resource</a></p>
-<p><b>Book:</b> <a href="${x.book[2]}" target="_blank" rel="noopener">${x.book[0]} — ${x.book[1]}</a></p>
-</div>
+<div class="lesson-passage"><p>${x.passage||x.lesson||''}</p></div>
+<h3>What to know</h3><p>${x.fact||''}</p>
+<h3>Try it</h3><p>${x.exercise||''}</p>
+<h3>Practice rule</h3><p>${x.practice||''}</p>
+<h3>Knowledge check</h3>${qsHtml}
+<h3>Reflection</h3><textarea id="lessonReflection" class="lesson-input" placeholder="${x.reflection_prompt||'What did this lesson make you notice about yourself?'}"></textarea>
 <div class="row" style="margin-top:14px">
-<button class="primary" type="button" id="completeLessonBtn">${done?'Completed ✓ — mark incomplete':'Mark day complete'}</button>
-<button class="secondary" type="button" id="backLessonsBtn">Back to lessons</button>
+<button class="primary" type="button" onclick="completeLesson(${i})">${done?'Completed — review again':'Mark lesson complete'}</button>
+<button class="secondary" type="button" onclick="closeLesson()">Back to lessons</button>
 </div>`;
-view.querySelectorAll('.quiz-answer').forEach(btn=>{
-btn.addEventListener('click',()=>{
-const n=Number(btn.dataset.q); const selected=btn.dataset.answer; const expected=x.quiz[n][2];
-const fb=document.getElementById('feedback-'+n);
-if(expected===null || expected===undefined){fb.textContent='Use the reading and explain the answer in your own words.';fb.className='muted';}
-else if(selected===expected){fb.textContent='Correct. Re-read the explanation above and connect it to your own example.';fb.className='correct';}
-else{fb.textContent='Not quite. Re-read the passage and try again.';fb.className='incorrect';}
-});
-});
-document.getElementById('completeLessonBtn').addEventListener('click',()=>completeLesson(i));
-document.getElementById('backLessonsBtn').addEventListener('click',closeLesson);
 view.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function closeLesson(){const view=document.getElementById('lessonView');view.style.display='none';}
@@ -410,6 +396,20 @@ q.textContent=qs[Math.floor(Math.random()*qs.length)];render();
     const i=Number(card.getAttribute("data-communication-lesson-index"));
     if(Number.isFinite(i) && typeof openCommunicationLesson==="function") openCommunicationLesson(i);
   });
+})();
+(function mirrorLessonQuizDelegation(){
+if(window.mirrorLessonQuizDelegation)return;
+window.mirrorLessonQuizDelegation=true;
+document.addEventListener('click',function(e){
+const b=e.target.closest('.quiz-answer');
+if(!b)return;
+const q=Number(b.dataset.q), chosen=Number(b.dataset.answerIndex), correct=b.dataset.correct===''?null:Number(b.dataset.correct);
+const fb=document.getElementById('feedback-'+q);
+if(!fb)return;
+if(correct!==null && chosen===correct){fb.textContent='Correct. Now connect the concept to a real situation.';fb.className='correct';}
+else if(correct!==null){fb.textContent='Not quite. Re-read the lesson and try again.';fb.className='incorrect';}
+else{fb.textContent='Response recorded. Compare your reasoning with the lesson.';fb.className='muted';}
+});
 })();
 </script>
 </body></html>
