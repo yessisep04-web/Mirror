@@ -310,7 +310,7 @@ document.getElementById('libraryLinks').innerHTML=links.map(x=>`<div class="reso
 }
 function renderCommunicationLessons(){
 const groups={}; communicationLessons.forEach((x,i)=>{(groups[x.topic]||(groups[x.topic]=[])).push({...x,i})});
-document.getElementById('communicationLessons').innerHTML=Object.entries(groups).map(([topic,items])=>`<div class="track"><h3>${topic}</h3><div class="muted" style="font-size:12px;margin-bottom:5px">${items.length} lessons</div>${items.map(x=>`<div class="lesson"><button class="primary" type="button" onclick="openCommunicationLesson(${x.i})">Open lesson</button><span class="tag">Lesson ${x.i+1}</span><br><b>${x.title}</b><div class="muted" style="font-size:12px;margin-top:3px">Read → test → practice → reflect.</div></div>`).join('')}</div>`).join('');
+document.getElementById('communicationLessons').innerHTML=Object.entries(groups).map(([topic,items])=>`<div class="track"><h3>${topic}</h3><div class="muted" style="font-size:12px;margin-bottom:5px">${items.length} lessons</div>${items.map(x=>`<div class="lesson"><button class="lesson-card primary" data-communication-lesson-index="${x.i}" type="button" onclick="openCommunicationLesson(${x.i})"><span class="lesson-title">Open lesson</span></button><span class="tag">Lesson ${x.i+1}</span><br><b>${x.title}</b><div class="muted" style="font-size:12px;margin-top:3px">Read → test → practice → reflect.</div></div>`).join('')}</div>`).join('');
 }
 function openCommunicationLesson(i){
 const x=communicationLessons[i], view=document.getElementById('communicationLessonView'); view.style.display='block';
@@ -324,7 +324,7 @@ const grouped={};
 lessons.forEach((x,i)=>{if(!grouped[x.track]) grouped[x.track]=[]; grouped[x.track].push({...x,i})});
 document.getElementById('lessons').innerHTML=Object.entries(grouped).map(([track,items])=>`
 <div class="track"><h3>${track}</h3><div class="muted" style="font-size:12px;margin-bottom:5px">${items.length} lessons</div>
-${items.map(x=>{let done=d.lessons.includes(x.i);return `<div class="lesson"><button class="${done?'secondary':'primary'}" onclick="openLesson(${x.i})" type="button">class="lesson-card" data-lesson-index="${x.i}">${done?'Review':'Open lesson'}</button><span class="tag">Day ${x.i+1}</span><br><b>${x.title}</b><div class="muted" style="font-size:12px;margin-top:3px">${done?'Completed — review anytime.':'Read → study → practice → reflect.'}</div></div>`}).join('')}
+${items.map(x=>{let done=d.lessons.includes(x.i);return `<div class="lesson"><button class="lesson-card ${done?'secondary':'primary'}" data-lesson-index="${x.i}" onclick="openLesson(${x.i})" type="button"><span class="lesson-title">${done?'Review':'Open lesson'}</span></button><span class="tag">Day ${x.i+1}</span><br><b>${x.title}</b><div class="muted" style="font-size:12px;margin-top:3px">${done?'Completed — review anytime.':'Read → study → practice → reflect.'}</div></div>`}).join('')}
 </div>`).join('');
 }
 function openLesson(i){
@@ -398,6 +398,17 @@ q.textContent=qs[Math.floor(Math.random()*qs.length)];render();
     if(!Number.isFinite(i)) return;
     if(typeof openLesson === "function") openLesson(i);
     else if(typeof showLesson === "function") showLesson(i);
+  });
+})();
+
+(function communicationLessonCardDelegation(){
+  if(window.communicationLessonCardDelegation) return;
+  window.communicationLessonCardDelegation=true;
+  document.addEventListener("click",function(e){
+    const card=e.target.closest("[data-communication-lesson-index]");
+    if(!card) return;
+    const i=Number(card.getAttribute("data-communication-lesson-index"));
+    if(Number.isFinite(i) && typeof openCommunicationLesson==="function") openCommunicationLesson(i);
   });
 })();
 </script>
