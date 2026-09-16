@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#171717">
+<title>Mirror</title>
+<style>
+:root{--bg:#f5f4f0;--card:#fff;--ink:#171717;--muted:#6b6b6b;--line:#ddd9d0;--soft:#ece9e2}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.45}
+.app{max-width:760px;margin:auto;padding:20px 16px 90px}.top{margin-bottom:18px}h1{font-size:30px;margin:0}h2{font-size:21px;margin:0 0 10px}h3{font-size:16px;margin:12px 0 6px}.muted{color:var(--muted)}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;z-index:5}
+nav button{border:0;background:none;padding:10px 5px;font-size:11px;flex:1;color:#666}nav button.active{color:#000;font-weight:700}
+section{display:none}.active{display:block}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:17px;margin:12px 0}
+button.primary{background:#171717;color:white;border:0;border-radius:12px;padding:12px 15px;font-weight:700}
+button.secondary{background:var(--soft);color:var(--ink);border:0;border-radius:12px;padding:11px 14px;font-weight:600}
+input,textarea{width:100%;border:1px solid var(--line);border-radius:11px;padding:11px;margin:6px 0 12px;font:inherit;background:#fff}textarea{min-height:82px}
+label{font-size:13px;font-weight:700;display:block;margin-top:8px}.row{display:flex;gap:8px;flex-wrap:wrap}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:var(--soft);border-radius:14px;padding:14px}.big{font-size:34px;font-weight:800}
+.lesson{padding:13px 0;border-bottom:1px solid var(--line)}.lesson button{float:right}.danger{color:#900}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top"><h1>Mirror</h1><div class="muted">See yourself clearly. Act deliberately.</div></div>
+
+<section id="home" class="active">
+<div class="card"><h2>Today</h2><p>Use Mirror when something feels confusing, emotionally charged, or repetitive.</p>
+<div class="row"><button class="primary" onclick="go('analyze')">Analyze an incident</button><button class="secondary" onclick="go('stop')">STOP</button></div></div>
+<div class="grid"><div class="stat"><div class="big" id="ic">0</div><div class="muted">incidents</div></div><div class="stat"><div class="big" id="pc">0</div><div class="muted">predictions</div></div></div>
+<div class="card"><h2>Daily question</h2><p id="q"></p><button class="secondary" onclick="newQ()">Another question</button></div>
+<div class="card"><b>Core rule</b><p>Observe → Infer → Test → Update.</p><p class="muted">Your first interpretation is a hypothesis, not automatically a fact.</p></div>
+</section>
+
+<section id="analyze"><div class="card"><h2>Incident Analyzer</h2>
+<p class="muted">Separate observable facts from interpretation, then examine the function and cost of your behavior.</p>
+<label>What objectively happened?</label><textarea id="a1"></textarea>
+<label>What did you think it meant?</label><textarea id="a2"></textarea>
+<label>What did you feel? Include intensity 0–10.</label><input id="a3">
+<label>What urge did you have?</label><textarea id="a4"></textarea>
+<label>What did you do or almost do?</label><textarea id="a5"></textarea>
+<label>What did that behavior give you immediately?</label><textarea id="a6" placeholder="Relief, control, reassurance, distance, attention..."></textarea>
+<label>What did it cost you later?</label><textarea id="a7"></textarea>
+<label>Evidence supporting your interpretation</label><textarea id="a8"></textarea>
+<label>Evidence against it</label><textarea id="a9"></textarea>
+<label>Three plausible explanations</label><textarea id="a10"></textarea>
+<label>What could you learn to test them?</label><textarea id="a11"></textarea>
+<label>Most deliberate next action</label><textarea id="a12"></textarea>
+<button class="primary" onclick="save('incidents',['a1','a2','a3','a4','a5','a6','a7','a8','a9','a10','a11','a12'])">Save analysis</button>
+</div></section>
+
+<section id="stop"><div class="card"><h2>STOP</h2><p class="muted">Use before sending the message, confronting someone, withdrawing, escalating, or making a decision.</p>
+<h3>S — Stop</h3><p>Do not act for a few breaths.</p><h3>T — Take a step back</h3><p>Create distance between impulse and action.</p>
+<h3>O — Observe</h3><textarea id="s1" placeholder="Facts / thoughts / feelings / urges"></textarea>
+<h3>P — Proceed mindfully</h3><textarea id="s2" placeholder="What action fits my values and the available evidence?"></textarea>
+<button class="primary" onclick="save('stops',['s1','s2'])">Save STOP check</button></div></section>
+
+<section id="people"><div class="card"><h2>People Analyzer</h2><p class="muted">Understand people without pretending you can read their minds.</p>
+<label>What did they actually say or do?</label><textarea id="p1"></textarea>
+<label>What did you assume it meant?</label><textarea id="p2"></textarea>
+<label>Hypothesis A</label><textarea id="p3"></textarea>
+<label>Hypothesis B</label><textarea id="p4"></textarea>
+<label>Hypothesis C</label><textarea id="p5"></textarea>
+<label>Evidence for and against</label><textarea id="p6"></textarea>
+<label>One non-leading question you could ask</label><textarea id="p7"></textarea>
+<label>What would change your mind?</label><textarea id="p8"></textarea>
+<button class="primary" onclick="save('people',['p1','p2','p3','p4','p5','p6','p7','p8'])">Save analysis</button></div></section>
+
+<section id="learn"><div class="card"><h2>30-Day Training</h2><p class="muted">Practice one skill each day.</p><div id="lessons"></div></div></section>
+
+<section id="progress">
+<div class="card"><h2>Progress</h2><div class="grid"><div class="stat"><div class="big" id="i2">0</div> incidents</div><div class="stat"><div class="big" id="s2">0</div> STOP checks</div><div class="stat"><div class="big" id="p2">0</div> people analyses</div><div class="stat"><div class="big" id="l2">0</div> lessons</div></div></div>
+<div class="card"><h2>Prediction Journal</h2>
+<label>Prediction</label><textarea id="r1"></textarea><label>Confidence 0–100%</label><input id="r2" type="number" min="0" max="100">
+<label>What would prove you wrong?</label><textarea id="r3"></textarea><label>Outcome, after it happens</label><textarea id="r4"></textarea>
+<button class="primary" onclick="save('predictions',['r1','r2','r3','r4'])">Log prediction</button></div>
+<div class="card"><h2>Data</h2><p class="muted">Entries stay in this browser/device unless you export them.</p><button class="secondary" onclick="exportData()">Export JSON</button> <button class="secondary danger" onclick="erase()">Erase everything</button></div>
+</section>
+</div>
+<nav><button id="n-home" class="active" onclick="go('home')">Home</button><button id="n-analyze" onclick="go('analyze')">Analyze</button><button id="n-stop" onclick="go('stop')">STOP</button><button id="n-people" onclick="go('people')">People</button><button id="n-learn" onclick="go('learn')">Learn</button><button id="n-progress" onclick="go('progress')">Progress</button></nav>
+<script>
+const KEY='mirror_v1'; let d=JSON.parse(localStorage.getItem(KEY)||'{"incidents":[],"stops":[],"people":[],"predictions":[],"lessons":[]}');
+const qs=["What am I assuming that I do not actually know?","What part of this is mine to own?","What short-term reward am I seeking, and what is the long-term cost?","If my interpretation were wrong, what else could be true?","What behavior would I respect myself for tomorrow?","What evidence would change my mind?","Am I reacting to this moment or an older pattern?"];
+const lessons=["Observe before interpreting","Separate thoughts from facts","ABC: antecedent, behavior, consequence","Spot cognitive distortions","Test evidence","Generate alternative hypotheses","Weekly review","Identify triggers","Name urges without obeying them","Practice STOP","Track consequences","Create if–then plans","Repair after mistakes","Weekly review","Check attribution errors","Describe behavior without judgment","Reflect before advising","Identify needs and goals","Notice contradictions","Clarify boundaries","Weekly review","Make explicit predictions","Consider base rates","Look for confirmation bias","Update beliefs","Notice emotional reasoning","Clarify values","Map recurring patterns","Build a prevention plan","Write your personal operating system"];
+function persist(){localStorage.setItem(KEY,JSON.stringify(d));render()} function go(id){document.querySelectorAll('section').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));document.getElementById('n-'+id).classList.add('active');scrollTo(0,0);render()}
+function save(type,ids){d[type].push({date:new Date().toISOString(),values:ids.map(x=>document.getElementById(x).value)});ids.forEach(x=>document.getElementById(x).value='');persist();alert('Saved.')}
+function render(){ic.textContent=d.incidents.length;pc.textContent=d.predictions.length;i2.textContent=d.incidents.length;s2.textContent=d.stops.length;p2.textContent=d.people.length;l2.textContent=d.lessons.length;lessonsEl()}
+function lessonsEl(){document.getElementById('lessons').innerHTML=lessons.map((x,i)=>`<div class="lesson"><button class="${d.lessons.includes(i)?'secondary':'primary'}" onclick="toggle(${i})">${d.lessons.includes(i)?'Done':'Complete'}</button><b>Day ${i+1}</b><br>${x}</div>`).join('')}
+function toggle(i){d.lessons.includes(i)?d.lessons=d.lessons.filter(x=>x!==i):d.lessons.push(i);persist()}
+function newQ(){q.textContent=qs[Math.floor(Math.random()*qs.length)]}
+function exportData(){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download='mirror-data.json';a.click()}
+function erase(){if(confirm('Erase all Mirror data on this device?')){localStorage.removeItem(KEY);location.reload()}}
+q.textContent=qs[new Date().getDate()%qs.length];render();
+</script>
+</body></html>
